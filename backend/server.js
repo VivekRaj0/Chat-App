@@ -1,30 +1,35 @@
-// To call express
+import path from "path";
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
-import authRoutes from "./routes/auth.routes.js"
-import messageRoutes from "./routes/message.routes.js"
-import userRoutes from "./routes/user.routes.js"
+import authRoutes from "./routes/auth.routes.js";
+import messageRoutes from "./routes/message.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
-
-// To call env file and use env variables from it
 import connectToMongoDB from "./db/connectToMongoDB.js";
-// either run on port from .env file or on port 5000
-const app = express();
+import { app, server } from "./socket/socket.js";
+
 const PORT = process.env.PORT || 5000;
+
+const __dirname = path.resolve();
 
 dotenv.config();
 
 app.use(express.json()); // to parse the incoming requests with JSON payloads (from req.body)
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 
+app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
-app.listen(PORT, () => {
-    connectToMongoDB();
-console.log('server Running on port:'+ PORT)
+app.get("*", (req, res) => {
+	res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+});
+
+server.listen(PORT, () => {
+	connectToMongoDB();
+	console.log(`Server Running on port ${PORT}`);
 });
